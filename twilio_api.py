@@ -37,8 +37,8 @@ def voice_request_postal_code(call_sid):
 
 def voice_request_phone_number(call_sid):
     response = VoiceResponse()
-    response.say('Bitte geben sie jetzt ihre Rückrufnummer ein. '
-                 'Und bestätigen Sie mit #',
+    response.say('Bitte geben sie jetzt ihre Rückrufnummer ein'
+                 'und bestätigen Sie mit #',
                  voice='woman', language='de-DE')
     response.gather(action=url_for('twilio_api.voice_get_phone_number', call_sid=call_sid))
     return str(response)
@@ -47,8 +47,8 @@ def voice_request_phone_number(call_sid):
 def voice_request_confirmation(call_sid, postal_code, phone_number):
     response = VoiceResponse()
     response.say(f"Jemand in der Nähe von {postal_code} ruft sie bald unter "
-                 f"{phone_number} an. Bitte bestätigen mit 1. Korrektur Postalcode "
-                 f"mit 2. Korrektur Telefonnummer mit 3.",
+                 f"{phone_number} an. Bitte bestätigen mit 1 Korrektur Postleitzahl "
+                 f"mit 2 Korrektur Telefonnummer mit 3.",
                  voice='woman', language='de-DE')
     response.gather(action=url_for('twilio_api.voice_confirm', call_sid=call_sid))
     return str(response)
@@ -77,7 +77,21 @@ def voice_get_phone_number(call_sid):
 
 @twilio_api.route('/call/<call_sid>/confirm', methods=['POST'])
 def voice_confirm(call_sid):
+    call_data = cache.get(call_sid)
+
+    confirm_code = request.values['Digits']
+    if confirm_code != 1:
+        return
+
+    HelpRequest.create(
+        created_at = datetime.now(tz=pytz.timezone('Europe/Berlin')
+        status = HelpRequestStatuses.OPEN,
+        postal_code=call_data['postal_code'],
+        phone_number=call_data['phone_number'],
+
+    )
     response = VoiceResponse()
+
     response.say(f"Vielen Dank! Es ruft bald jemand an.",
                  voice='woman', language='de-DE')
     return str(response)
