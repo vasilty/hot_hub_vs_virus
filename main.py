@@ -21,5 +21,10 @@ def _db_close(exc):
         config.DATABASE.close()
 
 
+@app.errorhandler(500)
+def handle_500(e):
+    return type(e).__name__, 500
+
+
 if __name__ == '__main__':
     app.run(debug=config.DEBUG)
