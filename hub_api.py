@@ -1,13 +1,13 @@
-import datetime
 from functools import wraps
 
-import pytz
+import requests
 from flask import Blueprint, g, request
 
 import config
 from models import (
-    HelpRequest, HelpRequestStatuses, Volunteer, VolunteerActionTypes,
-    VolunteerStatuses)
+    HelpRequest, HelpRequestStatuses, Volunteer, VolunteerAction,
+    VolunteerActionTypes, VolunteerStatuses)
+from utils import now
 
 hub_api = Blueprint('hub_api', __name__)
 
@@ -83,6 +83,7 @@ def update_volunteer(id_at_source):
 
 
 @hub_api.route('/help_requests/<int:help_request_id>/', methods=['POST'])
+@config.DATABASE.atomic()
 @api_key_required
 def perform_volunteer_action(help_request_id):
     try:
@@ -109,7 +110,34 @@ def perform_volunteer_action(help_request_id):
             return 'Invalid volunteer action', 400
     else:
         return 'Volunteer actions cannot be performed on this help request', 400
-    now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-    help_request.state_changed_at = now
+    help_request.status_changed_at = now()
     help_request.status = status
     help_request.save()
+    VolunteerAction.create(
+        help_request=help_request,
+        volunteer=help_request.volunteer,
+        action=action,
+        happened_at=now(),
+    )
+    if status == HelpRequestStatuses.OPEN:
+        handle_open_help_request(help_request)
+    return {}, 200
+
+
+@config.DATABASE.atomic()
+def handle_open_help_request(help_request):
+    # ToDo: Handle errors/no matches properly. Might need a task instead that
+    # handles open help requests
+    if help_request.status != HelpRequestStatuses.OPEN:
+        return
+    volunteer = help_request.find_volunteer()
+    help_request.volunteer = volunteer
+    if volunteer:
+        help_request.status = HelpRequestStatuses.PENDING
+        help_request.status_changed_at = now()
+    help_request.save()
+
+    if volunteer:
+        source_callback = config.SOURCES[volunteer.source]['pending_help_request_callback']
+        if source_callback:
+            requests.get(source_callback, data={'id': help_request.id})

@@ -57,6 +57,24 @@ class HelpRequest(BaseModel):
     status = peewee.CharField(choices=HelpRequestStatuses.choices())
     status_changed_at = DateTimeTZField()
 
+    def find_volunteer(self):
+        declined = (VolunteerAction
+                    .select(VolunteerAction.volunteer_id)
+                    .where(
+                        VolunteerAction.help_request == self,
+                        VolunteerAction.action == VolunteerActionTypes.DECLINE)
+                    )
+        volunteer = (Volunteer
+                     .select()
+                     .where(
+                        Volunteer.status == VolunteerStatuses.ACTIVE,
+                        Volunteer.postal_code == self.postal_code,
+                        Volunteer.id.not_in(declined))
+                     .order_by(peewee.fn.Random())
+                     .first()
+                     )
+        return volunteer
+
 
 class VolunteerActionTypes(BaseChoices):
     ACCEPT = 'accept'
@@ -67,6 +85,6 @@ class VolunteerActionTypes(BaseChoices):
 class VolunteerAction(BaseModel):
     id = peewee.AutoField()
     help_request = peewee.ForeignKeyField(HelpRequest)
-    volunteer = peewee.ForeignKeyField(Volunteer)
+    volunteer = peewee.ForeignKeyField(Volunteer, backref='actions')
     action = peewee.CharField(choices=VolunteerActionTypes.choices())
     happened_at = DateTimeTZField()

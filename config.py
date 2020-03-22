@@ -45,8 +45,10 @@ HOT_VS_VIRUS_WEBSITE = env_var('HOT_VS_VIRUS_WEBSITE', 'hot_vs_virus_website')
 SOURCES = {
     'telegram': {
         'api_key': env_var('TELEGRAM_API_KEY', 'telegram'),
+        'pending_help_request_callback': '',
     },
     'hot_vs_virus_website': {
-        'api_key': env_var('HOT_VS_VIRUS_WEBSITE_API_KEY', 'hot_vs_virus_website')
+        'api_key': env_var('HOT_VS_VIRUS_WEBSITE_API_KEY', 'hot_vs_virus_website'),
+        'pending_help_request_callback': '',
     }
 }

@@ -27,7 +27,7 @@ pyflakes==2.1.1           # via flake8
 pyjwt==1.7.1              # via twilio
 pytz==2019.3              # via -r requirements.in, twilio
 redis==3.4.1              # via -r requirements.in
-requests==2.23.0          # via twilio
+requests==2.23.0          # via -r requirements.in, twilio
 six==1.14.0               # via pip-tools, twilio
 testfixtures==6.14.0      # via flake8-isort
 toml==0.10.0              # via isort

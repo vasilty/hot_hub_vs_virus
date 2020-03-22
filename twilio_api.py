@@ -1,12 +1,12 @@
-import datetime
 import logging
 
-import pytz
 from flask import Blueprint, request, url_for
 from twilio.twiml.voice_response import VoiceResponse
 
 from config import cache
+from hub_api import handle_open_help_request
 from models import HelpRequest, HelpRequestStatuses
+from utils import now
 
 logger = logging.getLogger(__name__)
 
@@ -87,14 +87,14 @@ def voice_confirm(call_sid):
                      voice='woman', language='de-DE')
     else:
         call_data = cache.get(call_sid)
-        now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-        HelpRequest.create(
+        help_request = HelpRequest.create(
             postal_code=call_data['postal_code'],
             phone_number=call_data['phone_number'],
             status=HelpRequestStatuses.OPEN,
-            status_changed_at=now,
-            created_at=now,
+            status_changed_at=now(),
+            created_at=now(),
         )
+        handle_open_help_request(help_request)
         response.say("Vielen Dank! Es ruft bald jemand an.",
                      voice='woman', language='de-DE')
     return str(response)
