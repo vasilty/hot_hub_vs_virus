@@ -27,6 +27,14 @@ DATABASE = PostgresqlExtDatabase(
     port=db_url.port,
 )
 
+REDIS_URL = env_var('REDIS_URL')
+if not REDIS_URL:
+    CACHE = {'CACHE_TYPE': 'simple'}
+else:
+    CACHE = {'CACHE_TYPE': 'redis', 'CACHE_REDIS_URL': REDIS_URL}
+from flask_caching import Cache  # noqa: E402,I001
+cache = Cache(config=CACHE)
+
 TELEGRAM_API_KEY = env_var('TELEGRAM_API_KEY', 'telegram')
 HOT_VS_VIRUS_WEBSITE = env_var('HOT_VS_VIRUS_WEBSITE', 'hot_vs_virus_website')
 

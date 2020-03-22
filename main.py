@@ -2,9 +2,12 @@ from flask import Flask
 
 import config
 from hub_api import hub_api
+from twilio_api import twilio_api
 
 app = Flask('hot_hub_vs_virus')
 app.register_blueprint(hub_api)
+app.register_blueprint(twilio_api)
+config.cache.init_app(app)
 
 
 @app.before_request
