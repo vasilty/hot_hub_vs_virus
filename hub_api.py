@@ -89,7 +89,10 @@ def perform_volunteer_action(help_request_id):
         action = request.form['action']
     except KeyError:
         return 'Missing required POST data', 400
-    help_request = HelpRequest.get(id=help_request_id)
+    try:
+        help_request = HelpRequest.get(id=help_request_id)
+    except HelpRequest.DoesNotExist:
+        return 'The help request does not exist', 404
     if help_request.status == HelpRequestStatuses.PENDING:
         if action == VolunteerActionTypes.ACCEPT:
             status = HelpRequestStatuses.ACCEPTED
