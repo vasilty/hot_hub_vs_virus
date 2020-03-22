@@ -6,6 +6,7 @@ flask_caching
 
 peewee
 psycopg2
+redis
 
 gunicorn
 pytz
