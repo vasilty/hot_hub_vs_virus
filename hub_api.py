@@ -65,19 +65,20 @@ def delete_volunteer(id_at_source):
 
 @config.DATABASE.atomic()
 def update_volunteer(id_at_source):
-    try:
-        postal_code = request.form['postal_code']
-        status = request.form['status']
-    except KeyError:
-        return 'Missing required POST data', 400
+    postal_code = request.form.get('postal_code')
+    status = request.form.get('status')
+    if not postal_code and not status:
+        return {}, 204
     if status not in VolunteerStatuses.values():
         return 'Invalid status', 400
     try:
         volunteer = Volunteer.get(source=g.source, id_at_source=id_at_source)
     except Volunteer.DoesNotExist:
         return 'The requested volunteer does not exist', 404
-    volunteer.postal_code = postal_code
-    volunteer.status = status
+    if postal_code:
+        volunteer.postal_code = postal_code
+    if status:
+        volunteer.status = status
     volunteer.save()
     return {}, 204
 
