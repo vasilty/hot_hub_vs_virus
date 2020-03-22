@@ -4,7 +4,7 @@ Setup
 `pip install -r requirements.txt`
 2. Create postgres database locally called `hot_hub_vs_virus` (check more 
 details in [config.py](config.py))
-3. Run the server with `gunicorn --log-file - app:app`
+3. Run the server with `gunicorn --log-file - main:app`
 
 
 Development guidelines 

@@ -2,25 +2,14 @@ import datetime
 from functools import wraps
 
 import pytz
-from flask import Flask, g, request
+from flask import Blueprint, g, request
 
 import config
 from models import (
     HelpRequest, HelpRequestStatuses, Volunteer, VolunteerActionTypes,
     VolunteerStatuses)
 
-app = Flask(__name__)
-
-
-@app.before_request
-def _db_connect():
-    config.DATABASE.connect()
-
-
-@app.teardown_request
-def _db_close(exc):
-    if not config.DATABASE.is_closed():
-        config.DATABASE.close()
+hub_api = Blueprint('hub_api', __name__)
 
 
 def api_key_required(view):
@@ -39,7 +28,7 @@ def api_key_source_map():
     return {data['api_key']: name for name, data in config.SOURCES.items()}
 
 
-@app.route('/volunteers/', methods=['POST'])
+@hub_api.route('/volunteers/', methods=['POST'])
 @api_key_required
 def create_volunteer():
     try:
@@ -59,7 +48,7 @@ def create_volunteer():
     return {}, 201
 
 
-@app.route('/volunteers/<id_at_source>/', methods=['PUT', 'DELETE'])
+@hub_api.route('/volunteers/<id_at_source>/', methods=['PUT', 'DELETE'])
 @api_key_required
 def manage_volunteer(id_at_source):
     if request.method == 'PUT':
@@ -93,7 +82,7 @@ def update_volunteer(id_at_source):
     return {}, 204
 
 
-@app.route('/help_requests/<int:help_request_id>/', methods=['POST'])
+@hub_api.route('/help_requests/<int:help_request_id>/', methods=['POST'])
 @api_key_required
 def perform_volunteer_action(help_request_id):
     try:
@@ -121,7 +110,3 @@ def perform_volunteer_action(help_request_id):
     help_request.state_changed_at = now
     help_request.status = status
     help_request.save()
-
-
-if __name__ == '__main__':
-    app.run(debug=config.DEBUG)
