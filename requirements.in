@@ -1,0 +1,10 @@
+pip-tools
+flake8-isort
+
+Flask
+
+peewee
+psycopg2
+
+gunicorn
+pytz
